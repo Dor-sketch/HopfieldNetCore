@@ -2,12 +2,14 @@
 This module contains the GUI class that is used to visualize the Hopfield network
 """
 
+import numpy as np
+from PIL import Image
 from matplotlib import pyplot as plt
 from matplotlib.widgets import Button
 import networkx as nx
 from hopfield import Hopfield
 from hop_proof import proof_concept, generate_equation
-import numpy as np
+
 
 ACTIVE_COLOR = "yellow"
 IDLE_COLOR = "darkblue"
@@ -62,9 +64,14 @@ class GUI:
                 "label": "Nothing to Store", "callback": self.store},
             {"position": [0.15, 0.05, 0.1, 0.07],
                 "label": "Add", "callback": self.add},
-            {"position": [0.04, 0.05, 0.1, 0.07], "label": "Overlap", "callback": self.get_overlap},
-            {"position": [0.04, 0.15, 0.1, 0.07], "label": "Energy", "callback": self.energy},
-            {"position": [0.04, 0.25, 0.1, 0.07], "label": "View Stored", "callback": self.view_stored},
+            {"position": [0.04, 0.05, 0.1, 0.07],
+                "label": "Overlap", "callback": self.get_overlap},
+            {"position": [0.04, 0.15, 0.1, 0.07],
+                "label": "Energy", "callback": self.energy},
+            {"position": [0.04, 0.25, 0.1, 0.07],
+                "label": "View Stored", "callback": self.view_stored},
+            {"position": [0.04, 0.35, 0.1, 0.07],
+                "label": "Make Gif", "callback": self.make_gif},
         ]
 
         for button in buttons:
@@ -92,6 +99,8 @@ class GUI:
                 self.benergy = b
             if button["label"] == "View Stored":
                 self.bview = b
+            if button["label"] == "Make Gif":
+                self.bgif = b
             b.label.set_fontstyle("italic")
             b.label.set_fontfamily("serif")
 
@@ -99,35 +108,25 @@ class GUI:
         """
         Display the stored patterns a new figure with small network graphs
         """
-        # copy current graph
         fig, ax = plt.subplots()
-        fig.set_size_inches(8, 4)
+        fig.set_size_inches(8, 8)
         fig.set_facecolor("black")
         ax.set_facecolor("black")
         ax.set_title("Stored Patterns", fontsize=20, color="lightblue",
-                        fontweight="bold", fontstyle="italic", fontfamily="serif")
+                     fontweight="bold", fontstyle="italic", fontfamily="serif")
         ax.set_xlabel("Stored Pattern")
-        ax.set_ylabel("Overlap")
+        ax.set_ylabel("Neuron State")
         for i, pattern in enumerate(self.stored):
-            pattern = np.array(pattern)
-            # create a new graph
-            graph = nx.Graph()
-            for j in range(self.N):
-                graph.add_node(j)
+            ax = fig.add_subplot(2, 2, i + 1)
+            ax.set_title(f"Pattern {i + 1}")
+            ax.set_facecolor("black")
+            ax.set_xticks([])
+            ax.set_yticks([])
+            ax.set_xlabel("Neuron")
+            ax.set_ylabel("State")
+            ax.bar(range(len(pattern)), pattern, color="lightblue")
 
-            pos = nx.spring_layout(graph, seed=42, iterations=100)
-            nx.draw_networkx(  # Draw the graph
-                graph,
-                pos,
-                node_color=self.get_nodes_colors(pattern),
-                with_labels=True,
-                ax=ax,
-                width=self.get_edges_style()[1],
-                node_size=1000,
-                edge_color=self.get_edges_style()[0],
-            )
-            ax.text(i, 1, f"Overlap: {self.hopfield.overlap_value(pattern):.2f}", ha="center", va="center",
-                     fontsize=12, color="black", fontweight="bold", fontstyle="italic")
+        plt.tight_layout()
         plt.show()
 
     def get_overlap(self, event):
@@ -147,7 +146,6 @@ class GUI:
         ax.bar(range(len(self.stored)), [self.hopfield.overlap_value(np.array(pattern))
                                          for pattern in self.stored], color="lightblue")
         plt.show()
-
 
     def add(self, event):
         self.patterns.append(self.hopfield.neurons.copy())
@@ -178,19 +176,15 @@ class GUI:
             plt.draw()
 
     def store(self, event):
-        print(self.patterns)
-        print(self.hopfield.weights)
         self.hopfield.store_patterns(self.patterns)
-        print(self.hopfield.weights)
         self.bstore.label.set_text("Nothing to store")
         self.badd.label.set_text("Add")
         self.bstore.label.set_color("black")
         self.badd.label.set_color("black")
         for pattern in self.patterns:
-            if pattern not in self.stored:
-                self.stored.append(pattern.copy())
-        self.patterns = []
-        print(f'Stored Patterns: {self.stored}')
+            if not any(np.array_equal(pattern, stored) for stored in self.stored):
+                self.stored.append(pattern)
+        self.patterns = self.patterns[:0]
         self.draw_graph()
         plt.draw()
 
@@ -358,3 +352,41 @@ class GUI:
         # Connect the click event to the handler
         self.fig.canvas.mpl_connect('button_press_event', self.on_click)
         plt.show()
+
+    def make_gif(self, event):
+        """
+        Create a gif of the network state
+        """
+        images = []
+
+        for i in range(20):
+            # update the GUI and redraw the graph
+            self.reset(None)
+            self.draw_graph()
+            plt.draw()
+            plt.pause(0.1)  # pause a bit for the plot to update
+
+            # save the current figure to an image file
+            self.fig.savefig(f"{i}.png")
+
+            # load the image file
+            img = Image.open(f"{i}.png")
+            # make it transparent
+            img = img.convert("RGBA")
+            datas = img.getdata()
+            newData = []
+            for item in datas:
+                if item[0] == 255 and item[1] == 255 and item[2] == 255:
+                    newData.append((255, 255, 255, 0))
+                else:
+                    newData.append(item)
+            img.putdata(newData)
+            images.append(img)
+
+        images[0].save('movie.gif', save_all=True,
+                       append_images=images[1:], optimize=False, duration=100, loop=0)
+
+
+if __name__ == "__main__":
+    gui = GUI(10)
+    gui.run()

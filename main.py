@@ -4,7 +4,7 @@ This is the main file to run the game.
 
 from gui import GUI
 
-NUMBER_OF_NEURONS = 4
+NUMBER_OF_NEURONS = 10
 
 
 if __name__ == "__main__":
