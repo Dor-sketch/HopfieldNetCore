@@ -6,7 +6,6 @@ Note the use of J as the weights matrix and sᵢ as the state of the neurons i.
 import numpy as np
 from hop_proof import subscript
 
-@staticmethod
 def sign(x):
     if x >= 0:
         return 1
@@ -26,6 +25,29 @@ DEFAULT_WEIGHTS = np.array(
 )
 
 DEFAULT_STATES = np.array([1, -1, -1, -1])
+
+
+# decorator to print equations
+def print_eq(func):
+    def wrapper(self, stored_pattern):
+        print("Calculating dot product:")
+        print(self.neurons)
+        stored_pattern = np.array(stored_pattern).flatten()  # ensure stored_pattern is a flat array
+        print(stored_pattern)
+        dot_product = 0
+        for neuron, pattern in zip(self.neurons, stored_pattern):
+            product = neuron * pattern
+            print(f"{neuron} * {pattern} = {product}")
+            dot_product += product
+        result = dot_product / self.N
+        print(f"Dot product of neurons and stored pattern: {dot_product}")
+        print(f"m = {dot_product} / {self.N} = {result}")
+        return func(self, stored_pattern)
+    return wrapper
+
+
+
+
 
 
 class Hopfield:
@@ -55,6 +77,17 @@ class Hopfield:
             self.weights = (self.weights + self.weights.T) / 2
         self.is_stable = False
         self.t = 0
+
+    @ print_eq
+    def overlap_value(self, stored_pattern):
+        """
+        Returns the ovarlap between a network state in time t and a stored pattern.
+
+        m = 1/N Σ sᵢ * sᵢ
+
+        Note the result is between -1 and 1.
+        """
+        return np.dot(self.neurons, stored_pattern) / self.N
 
     def has_converged(self, new_state):
         """

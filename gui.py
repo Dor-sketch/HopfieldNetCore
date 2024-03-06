@@ -7,8 +7,9 @@ from matplotlib.widgets import Button
 import networkx as nx
 from hopfield import Hopfield
 from hop_proof import proof_concept, generate_equation
+import numpy as np
 
-ACTIVE_COLOR = "lightgrey"
+ACTIVE_COLOR = "yellow"
 IDLE_COLOR = "darkblue"
 BUTTONS_COLOR = "lightblue"
 
@@ -38,6 +39,7 @@ class GUI:
         self.breset = None
         self.setup_buttons()
         self.patterns = []
+        self.stored = []
         # make window bigger
         self.fig.set_size_inches(14, 8)
 
@@ -60,6 +62,9 @@ class GUI:
                 "label": "Nothing to Store", "callback": self.store},
             {"position": [0.15, 0.05, 0.1, 0.07],
                 "label": "Add", "callback": self.add},
+            {"position": [0.04, 0.05, 0.1, 0.07], "label": "Overlap", "callback": self.get_overlap},
+            {"position": [0.04, 0.15, 0.1, 0.07], "label": "Energy", "callback": self.energy},
+            {"position": [0.04, 0.25, 0.1, 0.07], "label": "View Stored", "callback": self.view_stored},
         ]
 
         for button in buttons:
@@ -81,9 +86,68 @@ class GUI:
                 self.btheory = b
             if button["label"] == "Update Eq":
                 self.bupdate = b
-            b.label.set_fontweight("bold")
+            if button["label"] == "Overlap":
+                self.boverlap = b
+            if button["label"] == "Energy":
+                self.benergy = b
+            if button["label"] == "View Stored":
+                self.bview = b
             b.label.set_fontstyle("italic")
             b.label.set_fontfamily("serif")
+
+    def view_stored(self, event):
+        """
+        Display the stored patterns a new figure with small network graphs
+        """
+        # copy current graph
+        fig, ax = plt.subplots()
+        fig.set_size_inches(8, 4)
+        fig.set_facecolor("black")
+        ax.set_facecolor("black")
+        ax.set_title("Stored Patterns", fontsize=20, color="lightblue",
+                        fontweight="bold", fontstyle="italic", fontfamily="serif")
+        ax.set_xlabel("Stored Pattern")
+        ax.set_ylabel("Overlap")
+        for i, pattern in enumerate(self.stored):
+            pattern = np.array(pattern)
+            # create a new graph
+            graph = nx.Graph()
+            for j in range(self.N):
+                graph.add_node(j)
+
+            pos = nx.spring_layout(graph, seed=42, iterations=100)
+            nx.draw_networkx(  # Draw the graph
+                graph,
+                pos,
+                node_color=self.get_nodes_colors(pattern),
+                with_labels=True,
+                ax=ax,
+                width=self.get_edges_style()[1],
+                node_size=1000,
+                edge_color=self.get_edges_style()[0],
+            )
+            ax.text(i, 1, f"Overlap: {self.hopfield.overlap_value(pattern):.2f}", ha="center", va="center",
+                     fontsize=12, color="black", fontweight="bold", fontstyle="italic")
+        plt.show()
+
+    def get_overlap(self, event):
+        """
+        Display the overlap between the current state and the stored patterns
+        """
+        # open dialog with the stored patterns
+        fig, ax = plt.subplots()
+        fig.set_size_inches(8, 4)
+        fig.set_facecolor("black")
+        ax.set_facecolor("black")
+        ax.set_title("Overlap with Stored Patterns", fontsize=20, color="lightblue",
+                     fontweight="bold", fontstyle="italic", fontfamily="serif")
+        ax.set_xlabel("Stored Pattern")
+        ax.set_ylabel("Overlap")
+
+        ax.bar(range(len(self.stored)), [self.hopfield.overlap_value(np.array(pattern))
+                                         for pattern in self.stored], color="lightblue")
+        plt.show()
+
 
     def add(self, event):
         self.patterns.append(self.hopfield.neurons.copy())
@@ -122,7 +186,11 @@ class GUI:
         self.badd.label.set_text("Add")
         self.bstore.label.set_color("black")
         self.badd.label.set_color("black")
+        for pattern in self.patterns:
+            if pattern not in self.stored:
+                self.stored.append(pattern.copy())
         self.patterns = []
+        print(f'Stored Patterns: {self.stored}')
         self.draw_graph()
         plt.draw()
 
@@ -191,12 +259,15 @@ class GUI:
             widths = [width if width > 0.1 else 0.1 for width in widths]
         return colors, widths
 
-    def get_nodes_colors(self):
+    def get_nodes_colors(self, neurons=None):
         """
         Return the color of the nodes
         """
+        if neurons is None:
+            neurons = self.hopfield.neurons
+        print(f'in get_nodes_colors: {neurons}')
         return [
-            ACTIVE_COLOR if neuron == 1 else IDLE_COLOR for neuron in self.hopfield.neurons
+            ACTIVE_COLOR if neuron == 1 else IDLE_COLOR for neuron in list(neurons)
         ]
 
     def get_nodes_sizes(self):
