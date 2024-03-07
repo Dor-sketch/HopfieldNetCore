@@ -110,14 +110,18 @@ class GUI:
         """
         fig, ax = plt.subplots()
         fig.set_size_inches(8, 8)
-        fig.set_facecolor("black")
-        ax.set_facecolor("black")
+        fig.set_facecolor("white")
+        ax.set_facecolor("white")
         ax.set_title("Stored Patterns", fontsize=20, color="lightblue",
                      fontweight="bold", fontstyle="italic", fontfamily="serif")
-        ax.set_xlabel("Stored Pattern")
-        ax.set_ylabel("Neuron State")
+        ax.set_xlabel("Stored Pattern", color="lightblue")
+        ax.set_ylabel("Neuron State", color="lightblue")
+        ax.set_xticks([])
+        ax.set_yticks([])
+
+
         for i, pattern in enumerate(self.stored):
-            ax = fig.add_subplot(2, 2, i + 1)
+            ax = fig.add_subplot(self.N, 1, i + 1)
             ax.set_title(f"Pattern {i + 1}")
             ax.set_facecolor("black")
             ax.set_xticks([])
@@ -184,6 +188,10 @@ class GUI:
         for pattern in self.patterns:
             if not any(np.array_equal(pattern, stored) for stored in self.stored):
                 self.stored.append(pattern)
+                component_pattern = -1 * pattern
+                if not any(np.array_equal(component_pattern, stored) for stored in self.stored):
+                    self.stored.append(component_pattern)
+
         self.patterns = self.patterns[:0]
         self.draw_graph()
         plt.draw()
