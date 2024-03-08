@@ -6,6 +6,7 @@ Note the use of J as the weights matrix and sᵢ as the state of the neurons i.
 import numpy as np
 from hop_proof import subscript
 
+
 def sign(x):
     if x >= 0:
         return 1
@@ -32,7 +33,8 @@ def print_eq(func):
     def wrapper(self, stored_pattern):
         print("Calculating dot product:")
         print(self.neurons)
-        stored_pattern = np.array(stored_pattern).flatten()  # ensure stored_pattern is a flat array
+        # ensure stored_pattern is a flat array
+        stored_pattern = np.array(stored_pattern).flatten()
         print(stored_pattern)
         dot_product = 0
         for neuron, pattern in zip(self.neurons, stored_pattern):
@@ -44,10 +46,6 @@ def print_eq(func):
         print(f"m = {dot_product} / {self.N} = {result}")
         return func(self, stored_pattern)
     return wrapper
-
-
-
-
 
 
 class Hopfield:
@@ -116,7 +114,6 @@ class Hopfield:
                         self.weights[i][j] += \
                             (1/self.N) * self.neurons[i]*self.neurons[j]
 
-
     def next_state(self):
         """
         Compute the next state of the network.
@@ -135,7 +132,7 @@ class Hopfield:
         self.neurons = new_state
         self.t += 1
 
-    def getSynapticScore(self, i, j):
+    def getSynapticScore(self, i, j, network_state=None):
         """
         Returns the synaptic score between neuron i and neuron j.
         e(i, j) = -(1/2) * (Jᵢⱼ * sᵢ * sⱼ)
@@ -150,8 +147,9 @@ class Hopfield:
         - If a noiron is updated during the computation of the next state,
                 the energy of the network will decrease (see the proof concept in hop_proof.py)
         """
-        return -(1 / 2) * self.weights[i][j] * self.neurons[i] * self.neurons[j]
-
+        if network_state is None:
+            network_state = self.neurons
+        return -(1 / 2) * self.weights[i][j] * network_state[i] * network_state[j]
 
     def getLocalField(self, i):
         """
@@ -167,7 +165,7 @@ class Hopfield:
         # print(eq_str[:-2])
         return local_field
 
-    def getEnergy(self):
+    def getEnergy(self, network_state=None):
         """
         Returns the energy of the network.
         E = ΣΣeᵢⱼ
@@ -178,7 +176,12 @@ class Hopfield:
         The nuber of possible energys is 2^N where N is the number of neurons.
         """
         energy = 0
-        for i in range(self.neurons.shape[0]):
-            for j in range(self.neurons.shape[0]):
-                energy += self.getSynapticScore(i, j)
+
+        if network_state is None:
+            network_state = self.neurons
+        print(network_state)
+        for i in range(network_state.shape[0]):
+            for j in range(network_state.shape[0]):
+                energy += self.getSynapticScore(i, j, network_state)
+        print(f"Energy: {energy}")
         return energy
