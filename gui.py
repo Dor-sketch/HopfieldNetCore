@@ -363,8 +363,8 @@ class GUI:
         )
         energy = self.hopfield.get_energy()
         self.ax.text(
+            0.5,
             1,
-            self.ax.get_ylim()[1],
             f"Energy: {energy:.2f}",
 
             fontsize=12,
