@@ -12,43 +12,21 @@ N_WITH_BIAS = TSP_N + 1
 #     (1)  (2)  (3)  to Y
 #     (1)  (2)  (3)  to Z
 
-"""
-X -> X = 0
-X -> Y = 1
-X -> Z = 10
-
-Y -> X = 1
-Y -> Y = 0
-Y -> Z = 30
-
-Z -> X = 10
-Z -> Y = 30
-Z -> Z = 0
-"""
-
-import numpy as np
-
 DIST = np.array([[0, 1, 10],  # Distances from X to X, Y, Z
                  [1, 0, 30],  # Distances from Y to X, Y, Z
                  [10, 30, 0]])  # Distances from Z to X, Y, Z
 
+# for clarity make a dictionary
 DIST = { # Distances from X to X, Y, Z
     'X': {'X': 0, 'Y': 30, 'Z': 10},
     'Y': {'X': 1, 'Y': 30, 'Z': 10},
     'Z': {'X': 10, 'Y': 10, 'Z': 0}
 }
 
-DIST2 = np.array([[0, 1, 1],  # Distances from X to X, Y, Z
-                 [1, 0, 1],  # Distances from Y to X, Y, Z
-                 [1, 1, 0]])  # Distances from Z to X, Y, Z
-
 INITIAL_STATE = np.array([[1, 1, 0],
                           [0, 0, 1],
                           [0, 0, 0]])
 
-INITIAL_STATE2 = np.array([[1, 0, 0],
-                          [1, 1, 0],
-                          [0, 0, 1]])
 
 INITIAL_STATE_OPTIMAL = np.array([[0, 1, 0],
                                   [0, 0, 1],
@@ -65,9 +43,8 @@ DAYS = ['1', '2', '3']
 # we wil use i and j to iterate over the rows and X and Y to iterate over the columns
 # Each synapse is represented by a 4D matrix J[X][i][Y][j]
 # where X and Y are the cities (this side ->) and i and j are the steps in the trip (downwards)
-
 # valid state is a state representing a valid path through the cities
-
+#
 #      I    II   III
 #           2        to X
 #      1             to Y
@@ -157,10 +134,10 @@ def Kronecker_delta(i, j):
 # C = np.random.uniform(1-BETA, 1)
 # D = np.random.uniform(0, BETA) + 1/TSP_N
 
-A = 100
-B = 100
-C = 100
-D = 100
+A = 0.8
+B = 0.05
+C = 0.1
+D = 0.11
 
 
 class TSPNet(Hopfield):
@@ -226,6 +203,9 @@ class TSPNet(Hopfield):
         self.neurons = self.s.flatten()
 
     def next_state(self, s=None, dist=DIST):
+        """
+        Calculate the next state of the network
+        """
         if s is None:
             s = self.s
         new_s = s.copy()
@@ -239,12 +219,10 @@ class TSPNet(Hopfield):
                         print(f'{self.J[X][i][Y][j]}*{s[Y][j]}', end=' ')
                     print()
                 print(f' bias = {self.J[X][i][i][TSP_N]}*{s[X][i]}')
-                    # add the bias neurons
-                print(f'(J{city}{day},bias + {field}) = {field + self.J[X][i][i][TSP_N]}')
-                print()
-                s[X][i] = 1 if self.J[X][i][i][TSP_N] + field >= 0 else 0
-        self.neurons = s.flatten()
-        self.s = s
+                print(f'(J{city}{day},bias + {field}) = {field + self.J[X][i][i][TSP_N]}\n')
+                new_s[X][i] = 1 if self.J[X][i][i][TSP_N] + field >= 0 else 0
+        self.neurons = new_s.flatten()
+        self.s = new_s
         return s
 
 
@@ -265,7 +243,7 @@ class TSPNet(Hopfield):
                             - D * DIST[city][city2] * (Kronecker_delta(i-1, j) + Kronecker_delta(i+1, j))
                         print(f'J{city}{day},{city2}{day2}: {J[X][i][Y][j]}')
                     # Add the bias synapse to every neuron in the next layer
-                    J[X][i][Y][TSP_N] = TSP_N * C
+                    J[X][i][Y][TSP_N] = 3 * TSP_N * C
         return J
 
 
@@ -293,7 +271,9 @@ class TSPNet(Hopfield):
 
 
     def print_synaptic_matrix(self) -> None:
-        print(self.s)
+        """
+        Print the synaptic matrix
+        """
         for X, city in enumerate(CITIES):
             for i, day in enumerate(DAYS):
                 for Y, city2 in enumerate(CITIES):
@@ -304,28 +284,12 @@ class TSPNet(Hopfield):
                 print('')
 
 
-    # def get_synaptic_matrix(self, dist=DIST) -> np.ndarray:
-    #     """
-    #     Wrong implementation - no weights for the constraints
-    #     Calculate the synaptic matrix of a state
-    #     """
-    #     J = np.zeros((TSP_N, TSP_N, TSP_N, TSP_N))
-    #     for X in range(TSP_N):
-    #         for Y in range(TSP_N):
-    #             if X != Y:
-    #                 for i in range(TSP_N):
-    #                     for j in range(TSP_N):
-    #                         if abs(i - j) == 1:
-    #                             J[X][i][Y][j] = -dist[X][Y]
-    #     return J
-
-
     def get_energy_using_weight(self, s, dist=DIST, only_dot_product=False) -> float:
         """
         Calculate the energy of a state
         """
         energy = 0
-        J = self.get_synaptic_matrix()
+        J = self.J
 
         for X in range(TSP_N):
             for i in range(TSP_N):
@@ -348,9 +312,6 @@ class TSPNet(Hopfield):
             s = self.s
         for Y in range(self.N):
             for j in range(self.N):
-                print(s)
-                print(X, i, Y, j)
-                print(J[X][i][Y][j])
                 field += J[X][i][Y][j] * s[Y][j]
         s[X][i] = 1 if field > 0 else 0
         return s[X][i]
