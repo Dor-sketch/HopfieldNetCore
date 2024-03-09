@@ -38,7 +38,7 @@ class HopGraph:
         energy = np.zeros(posibble_states_num)
 
         for i, state in enumerate(states):
-            energy[i] = self.hopfield.getEnergy(np.array(state))
+            energy[i] = self.hopfield.get_energy(np.array(state))
 
         # cut only the first 4 states
 
@@ -77,7 +77,7 @@ class HopGraph:
             ]
         )
         # Calculate the energy for each state
-        energies = np.array([self.hopfield.getEnergy(state) for state in states])
+        energies = np.array([self.hopfield.get_energy(state) for state in states])
         is_stored = np.array(
             [
                 any(np.array_equal(stored, state) for stored in stored_pattern)

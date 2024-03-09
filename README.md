@@ -12,7 +12,7 @@ This is an ongoing project, and the GUI is being developed to support educationa
 ## Key Concepts 🗝️
 
 - **Weights Matrix (J)**: Represents the connections between neurons. Jᵢⱼ denotes the weight between neurons i and j.
-- **Neuron States (sᵢ)**: The state of neuron i, which can be either 1 or -1.
+- **Neuron States (sᵢ)**: The state of neuron i, which can be either 1 or -1 (or 1 and 0 in the case of the TSP).
 - **Energy**: Reflects the current state's stability. Lower energy indicates a more stable or converged state.
 - **Overlap Value**: Measures the similarity between the network's current state and a stored pattern, aiding in pattern recognition.
 
@@ -43,6 +43,40 @@ This is an ongoing project, and the GUI is being developed to support educationa
 | Weights Before Training | Weights After Training |
 |-------------------------|------------------------|
 | ![alt text](images/weights_before.png) | ![alt text](images/weights_after.png) |
+
+## Examples - Solving TSP 📚
+
+<p align="center">
+  <img src="images/TSP_landscape.png" alt="TSP Animation" width="600">
+
+The Hopfield network can be used to solve the Travelling Salesman Problem (TSP), a classic optimization problem. The network is trained to find the shortest path that visits each city exactly once and returns to the original city. The TSP file contains a custom implementation of the Hopfield network for the TSP, allowing users to visualize the network's state transitions and energy landscape as it solves the problem, and to plot the route.
+
+```python
+def get_synaptic_matrix_with_constraints(self, dist=DIST) -> np.ndarray:
+    """
+    Calculate the synaptic matrix based on the custom Energy function with constraints designed for the TSP.
+    """
+    J = np.zeros((TSP_N, TSP_N, TSP_N, TSP_N+1)) # +1 for the bias
+    for X, city in enumerate(CITIES):
+        for i, day in enumerate(DAYS):
+            for Y, city2 in enumerate(CITIES):
+                for j, day2 in enumerate(DAYS):
+                    J[X][i][Y][j] =  \
+                        - A * Kronecker_delta(X, Y) * (1 - Kronecker_delta(i, j)) \
+                        - B * Kronecker_delta(i, j) * (1 - Kronecker_delta(X, Y)) \
+                        - C \
+                        - D * DIST[city][city2] * (Kronecker_delta(i-1, j) + Kronecker_delta(i+1, j))
+                    print(f'J{city}{day},{city2}{day2}: {J[X][i][Y][j]}')
+                # Add the bias synapse to every neuron in the next layer
+                J[X][i][Y][TSP_N] = TSP_N * C
+    return J
+```
+
+The solution implementation was based on the litterature. The network energy function was designed to minimize the total distance of the route. Note that the network is not guaranteed to find the optimal solution, but it can provide a good approximation. Also note that no training is required for the TSP, as the network is initialized with synaptic weights that correspond to the problem's constraints.
+
+<p align="center">
+  <img src="images/TSP.png" alt="TSP Route" width="600">
+</p>
 
 ## Installation 📦
 

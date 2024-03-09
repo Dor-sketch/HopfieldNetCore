@@ -151,7 +151,7 @@ class Hopfield:
         # print(eq_str[:-2])
         return local_field
 
-    def getEnergy(self, network_state=None):
+    def get_energy(self, network_state=None):
         """
         Returns the energy of the network.
         E = ΣΣeᵢⱼ

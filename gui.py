@@ -20,8 +20,8 @@ class GUI:
     This class implements the GUI for the Hopfield network.
     """
 
-    def __init__(self, N):
-        self.hopfield = Hopfield(N)
+    def __init__(self, hopfield: Hopfield=None, N: int = 10):
+        self.hopfield = hopfield(N)
         self.from_node = None
         self.N = N
         self.fig, self.ax = plt.subplots()
@@ -96,6 +96,11 @@ class GUI:
                 "label": "3D",
                 "callback": self.plot_three_d,
             },
+            {
+                "position": [0.04, 0.55, 0.1, 0.07],
+                "label": "Plot TSP (WIP)",
+                "callback": self.plot_tsp,
+            },
         ]
 
         for button in buttons:
@@ -126,8 +131,55 @@ class GUI:
                 self.bgif = b
             if button["label"] == "3D":
                 self.b3d = b
+            if button["label"] == "Plot TSP (WIP)":
+                self.btsp = b
             b.label.set_fontstyle("italic")
             b.label.set_fontfamily("serif")
+
+    def plot_tsp(self, event):
+        """
+        Display the TSP solution (a route) in a new figure
+        """
+        # Assuming city_coords is a dictionary mapping city names to their coordinates
+        city_coords = {'X': (0, 0), 'Y': (1, 1), 'Z': (1, 0)}  # Replace with actual city coordinates
+
+        route = self.hopfield.get_route()
+
+        # Get the coordinates of the cities in the route
+        route_coords = [city_coords[city] for city in route]
+
+        # Unpack the city coordinates
+        x, y = zip(*route_coords)
+
+        # Create a new figure
+        fig, ax = plt.subplots()
+        fig.set_size_inches(8, 8)
+        fig.set_facecolor("white")
+        ax.set_facecolor("white")
+        ax.set_title(
+            "Traveling Salesman Problem",
+            fontsize=20,
+            color="blue",
+            fontweight="bold",
+            fontstyle="italic",
+            fontfamily="serif",
+        )
+
+        # Plot the cities
+        ax.plot(range(len(route)), route, 'o-')
+
+        # Set the labels
+        ax.set_xlabel('Day')
+        ax.set_ylabel('City')
+        ax.set_xticks(range(len(route)))
+        ax.set_xticklabels(route)
+        ax.set_yticks(range(len(route)))
+        ax.set_yticklabels(route)
+
+
+        # Show the plot
+        plt.show()
+
 
     def plot_three_d(self, event):
         with HopGraph(self.hopfield) as h:
@@ -244,7 +296,7 @@ class GUI:
         """
         Display the energy of the current state
         """
-        energy = self.hopfield.getEnergy()
+        energy = self.hopfield.get_energy()
         print(f"Energy: {energy}")
 
     def weights(self, event):
@@ -309,13 +361,12 @@ class GUI:
             fontstyle="italic",
             fontfamily="serif",
         )
-        energy = self.hopfield.getEnergy()
+        energy = self.hopfield.get_energy()
         self.ax.text(
             1,
-            self.ax.get_ylim()[1] - 0.2,
+            self.ax.get_ylim()[1],
             f"Energy: {energy:.2f}",
-            ha="center",
-            va="center",
+
             fontsize=12,
             color="black",
             fontweight="bold",
@@ -336,7 +387,7 @@ class GUI:
         # remove the "converged" label
         self.setup_buttons()
         self.storage.resert()
-        self.hopfield = Hopfield(self.N)
+        self.hopfield.reset()
         self.draw_graph()
         plt.draw()  # Use plt.draw() instead of plt.show() to update the current figure
 
