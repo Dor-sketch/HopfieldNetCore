@@ -23,6 +23,26 @@ for i in range(300):
     subscript[i + 1] = chr(8320 + i)
 
 
+# decorator to print equations
+def print_eq(func):
+    def wrapper(self, stored_pattern):
+        print("Calculating dot product:")
+        print(self.neurons)
+        # ensure stored_pattern is a flat array
+        stored_pattern = np.array(stored_pattern).flatten()
+        print(stored_pattern)
+        dot_product = 0
+        for neuron, pattern in zip(self.neurons, stored_pattern):
+            product = neuron * pattern
+            print(f"{neuron} * {pattern} = {product}")
+            dot_product += product
+        result = dot_product / self.N
+        print(f"Dot product of neurons and stored pattern: {dot_product}")
+        print(f"m = {dot_product} / {self.N} = {result}")
+        return func(self, stored_pattern)
+    return wrapper
+
+
 def part1(neurons=EXAMPLE, weights=EXAMPLE_WEIGHTS):
     """
     This function is a verbose explanation of the energy of the Hopfield network.

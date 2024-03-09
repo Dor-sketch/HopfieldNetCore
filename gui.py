@@ -22,6 +22,7 @@ class GUI:
 
     def __init__(self, N):
         self.hopfield = Hopfield(N)
+        self.from_node = None
         self.N = N
         self.fig, self.ax = plt.subplots()
         self.graph = nx.Graph()
@@ -130,7 +131,7 @@ class GUI:
 
     def plot_three_d(self, event):
         with HopGraph(self.hopfield) as h:
-            h.plot_three_d()
+            h.plot_three_d(self.storage.get_stored())
 
     def view_stored(self, event):
         """
@@ -166,8 +167,27 @@ class GUI:
                 clicked_node = node
                 break
         if clicked_node is not None:
+            # check if right click
+            if event.button == 3:
+                # mark as from and get other node to remove edge
+                print(f"Right click on node {clicked_node}")
+                if self.from_node is None:
+                    self.from_node = clicked_node
+                    # change color of the node
+
+                else:
+                    # print the values of the nodes synaptics on the clicked node
+                    # print it on weights button
+                    self.bweights.label.set_text(
+                        f"W[{self.from_node}][{clicked_node}]: {self.hopfield.weights[self.from_node][clicked_node]:.2f}"
+                    )
+                    self.bweights.label.set_color("red")
+                    self.bweights.label.set_fontsize(10)
+                    self.bweights.label.set_fontstyle("italic")
+                    self.from_node = None
+            else:
             # Change the state of the clicked node
-            self.hopfield.neurons[clicked_node] *= -1
+                self.hopfield.neurons[clicked_node] *= -1
             self.draw_graph()
             plt.draw()
 
@@ -263,6 +283,10 @@ class GUI:
             node_colors = h.get_nodes_colors()
             node_sizes = h.get_nodes_sizes()
             edges_colors, edge_widths = h.get_edges_style()
+
+        if self.from_node is not None:
+            node_colors[self.from_node] = "red"
+            edges_colors = ["red" if edge[0] == self.from_node else "black" for edge in self.graph.edges]
 
         nx.draw_networkx(  # Draw the graph
             self.graph,

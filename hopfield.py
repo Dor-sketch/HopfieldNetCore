@@ -4,14 +4,19 @@ Note the use of J as the weights matrix and sᵢ as the state of the neurons i.
 """
 
 import numpy as np
-from hop_proof import subscript
-
+from hop_proof import subscript, print_eq
 
 def sign(x):
     if x >= 0:
         return 1
     else:
         return -1
+
+def binary_activation(x):
+    if x > 0:
+        return 1
+    else:
+        return 0
 
 
 # Weights matrix representing the connections between neurons
@@ -28,32 +33,12 @@ DEFAULT_WEIGHTS = np.array(
 DEFAULT_STATES = np.array([1, -1, -1, -1])
 
 
-# decorator to print equations
-def print_eq(func):
-    def wrapper(self, stored_pattern):
-        print("Calculating dot product:")
-        print(self.neurons)
-        # ensure stored_pattern is a flat array
-        stored_pattern = np.array(stored_pattern).flatten()
-        print(stored_pattern)
-        dot_product = 0
-        for neuron, pattern in zip(self.neurons, stored_pattern):
-            product = neuron * pattern
-            print(f"{neuron} * {pattern} = {product}")
-            dot_product += product
-        result = dot_product / self.N
-        print(f"Dot product of neurons and stored pattern: {dot_product}")
-        print(f"m = {dot_product} / {self.N} = {result}")
-        return func(self, stored_pattern)
-    return wrapper
-
-
 class Hopfield:
     """
     This class implements a Hopfield network.
     """
 
-    def __init__(self, N=4, J=DEFAULT_WEIGHTS):
+    def __init__(self, N=4, J=DEFAULT_WEIGHTS, next_state_func=sign):
         """
         Create a new Hopfield network with N neurons.
         neurons can be in state 1 or -1.
@@ -61,6 +46,7 @@ class Hopfield:
 
         N: number of neurons
         """
+        self.next_state_func = next_state_func
         self.N = N
         self.neurons = np.random.choice([1, -1], N)  # Random initial state
         self.weights = np.zeros((N, N))
@@ -125,7 +111,7 @@ class Hopfield:
             # a state will be updated (s(t+1) = -s) iff sᵢ(t)•sgn(hᵢ(t)) < 0
             # where hᵢ(t) = Σj{ᵢⱼ}•sⱼ(t)
             # its equivalent to sᵢ(t)•hᵢ(t) < 0
-            new_state[i] = sign(np.dot(self.weights[i], self.neurons))
+            new_state[i] = self.next_state_func(np.dot(self.weights[i], self.neurons))
 
         if self.has_converged(new_state):
             self.is_stable = True
@@ -185,3 +171,31 @@ class Hopfield:
                 energy += self.getSynapticScore(i, j, network_state)
         print(f"Energy: {energy}")
         return energy
+
+    def getCitiesEnergy(self, S, dist, X1):
+        """
+        Returns the energy of the network for the TSP problem.
+
+        S: the state of the network
+        dist: the distance matrix between cities
+        X1: the index of the neuron to update
+        """
+
+    def setCustomEnergy(self, custom_weights=None):
+        """
+        Set a custom energy function for the network by setting the weights matrix.
+        """
+        # example fot the TSP problem
+
+        # use only distance between cities
+        # let dix{XY} be the distance between city X and city Y
+        # let sX be the state of the city X
+        # let s{Yi-1} and s{Yi+1} be the states of the cities Y before and after the city X
+
+        # E_D = 1/2 ΣΣΣdix{XY} * sX * (s{Yi-1} + s{Yi+1})
+
+        # now add constraints
+        # E_A = 1/2 ΣΣΣsxi * sxj // only 1 city per line - to avoid the same city twice in the same line
+        # E_B = 1/2 ΣΣΣsxi * sYi // only 1 city per column - to avoid the same city twice in the same column
+        # E_C = 1/2 (ΣΣsxi-N)^2 - N^2 // N cities in the tour - n set neurons to 1 ...
+        # hard - well add neurons to the network to deal with the constraints (BIAS neurons))
