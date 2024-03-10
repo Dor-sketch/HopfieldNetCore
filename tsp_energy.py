@@ -2,7 +2,6 @@
 This module contains the energy function for the TSP problem
 """
 
-import math
 from tsp_map import Map
 from tsp_weights import A, B, C, D
 

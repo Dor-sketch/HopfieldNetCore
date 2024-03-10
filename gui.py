@@ -2,16 +2,15 @@
 This module contains the GUI class that is used to visualize the Hopfield network
 """
 
+import random # for random colors
 from PIL import Image
 from matplotlib import pyplot as plt
 from matplotlib.widgets import Button
 import networkx as nx
-from hopfield import Hopfield
 from hop_proof import proof_concept, generate_equation
 from hop_graph import HopGraph
 from hop_styles import HopStyles
 from hop_storage import HopStorage
-import random
 
 BUTTONS_COLOR = "lightblue"
 

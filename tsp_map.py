@@ -3,6 +3,7 @@ A class to represent a map of cities
 """
 import math
 import matplotlib.pyplot as plt
+import numpy as np
 
 CITY_SET_A = {'A': (0.25, 0.16),
               'B': (0.85, 0.35),
@@ -115,35 +116,46 @@ class Map:
 
         # Create a new figure if it doesn't exist, otherwise clear the existing one
         fig, ax = plt.subplots()
+        plt.style.use('dark_background')  # Use dark background
+        ax.grid(True, linestyle='-', color='0.75')  # Add grid
         is_valid = True
-        # Plot the cities
-        ax.plot(x, y, 'o-', color='skyblue', linewidth=2, markersize=10)
+
+        # Plot the cities with gradient color and increased size
+        colors = plt.cm.viridis(np.linspace(0, 1, len(route_coords)))
+        for i in range(len(route_coords) - 1):
+            ax.plot(*zip(route_coords[i], route_coords[i + 1]),
+                    'o-', color=colors[i], linewidth=2, markersize=12)
+
         # Plot the first city
-        ax.plot(*route_coords[0], 'ro')  # First city in red
+        ax.plot(*route_coords[0], 'ro', markersize=14)  # First city in red
+
         # Set the title with the total route distance
-        ax.set_title(f'Route ({total_distance:.2f} Light Years)')
-        # check for missing cities or cities that are not in the city set
+        ax.set_title(f'Route ({total_distance:.2f} Light Years)',
+                     fontname='Comic Sans MS', fontsize=14)
+
+        # Check for missing cities or cities that are not in the city set
         if len(route) != len(self.city_set) or not all(city in self.city_set for city in route):
             is_valid = False
             city_list = list(self.city_set.keys())
             missing_cities = [city for city in city_list if city not in route]
             for city in missing_cities:
-                ax.text(*self.city_set[city], city, color='red', fontsize=12)
+                ax.text(*self.city_set[city], city, color='red',
+                        fontsize=12, fontname='Comic Sans MS')
 
         repeated_cities = [city for city in route if route.count(city) > 1]
         if repeated_cities:
             is_valid = False
-            # mark the repeated cities with the number of times they are repeated
+            # Mark the repeated cities with the number of times they are repeated
             for city in repeated_cities:
-                ax.text(*self.city_set[city],
-                        route.count(city), color='red', fontsize=12)
+                ax.text(*self.city_set[city], route.count(city),
+                        color='red', fontsize=12, fontname='Comic Sans MS')
 
         if is_valid:
             self.isValid = True
-            # congrats message
+            # Congrats message
             ax.text(0.5, 0.5, 'Congratulations! You have a valid route :)', transform=ax.transAxes, fontsize=12,
-                    verticalalignment='center', horizontalalignment='center', color='green')
-        # Draw the plot and pause for a short while to allow the window to update
-        # save the figure instead of showing it
-        plt.savefig('route' + str(self.count) + '.png')
+                    verticalalignment='center', horizontalalignment='center', color='green', fontname='Comic Sans MS')
+
+        # Save the figure instead of showing it
+        plt.savefig('route' + str(self.count).zfill(3) + '.png')
         self.count += 1

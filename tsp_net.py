@@ -31,7 +31,7 @@ class TSPNet(Hopfield):
         self.road_map = Map()
         print(self.road_map.city_set)
         self.N = len(self.road_map.city_set)
-        self.days = [str(i) for i in range(1, self.N+1)]
+        self.days = [str(i) for i in range(1, self.N + 1)]
         self.s = self.get_random_state()
         self.J = self.get_synaptic_matrix_with_constraints()
         self.neurons = self.s.flatten()
@@ -78,7 +78,7 @@ class TSPNet(Hopfield):
             s = self.s
         # change to x and y from X based on colls
         if i is None:
-            X, i = divmod(X-1, 3)
+            X, i = divmod(X - 1, 3)
 
         for Y in range(2):
             for j in range(2):
@@ -107,6 +107,7 @@ class TSPNet(Hopfield):
         """
         Calculate the next state of the network
         """
+        self.road_map.take_snapshot(self.get_route(self.s))
 
         iterations = 5 * self.N * self.N * self.N
         history = []
@@ -115,7 +116,8 @@ class TSPNet(Hopfield):
             before = self.s[X][i]
             self.update_state(X, i, self.s)
             print(
-                f'X={X}, i={i}, before={before} => after={self.s[X][i]}, energy={self.get_energy(self.s)}')
+                f"X={X}, i={i}, before={before} => after={self.s[X][i]}, energy={self.get_energy(self.s)}"
+            )
             if self.get_energy(s) < 1:
                 break
             history.append(self.get_energy(self.s))
@@ -123,6 +125,8 @@ class TSPNet(Hopfield):
                 break
 
         self.neurons = self.s.flatten()
+        self.road_map.take_snapshot(self.get_route(self.s))
+        return self.s
 
     def next_state_all(self, s=None, map=None):
         """
@@ -138,15 +142,16 @@ class TSPNet(Hopfield):
                 for Y, city2 in enumerate(self.road_map.city_set.copy()):
                     for j, day2 in enumerate(self.days):
                         field += self.J[X][i][Y][j] * s[Y][j]
-                        print(f'{self.J[X][i][Y][j]}*{s[Y][j]}', end=' ')
+                        print(f"{self.J[X][i][Y][j]}*{s[Y][j]}", end=" ")
                     print()
-                print(f' bias = {self.J[X][i][i][self.N]}*{s[X][i]}')
+                print(f" bias = {self.J[X][i][i][self.N]}*{s[X][i]}")
                 print(
-                    f'(J{city}{day},bias + {field}) = {field + self.J[X][i][i][self.N]}\n')
+                    f"(J{city}{day},bias + {field}) = {field + self.J[X][i][i][self.N]}\n"
+                )
                 new_s[X][i] = 1 if (self.J[X][i][i][self.N] + field > 0) else 0
         self.neurons = new_s.flatten()
         self.s = new_s
-        print(f'END: {self.get_energy_with_constraints_and_weights(new_s)}')
+        print(f"END: {self.get_energy_with_constraints_and_weights(new_s)}")
         return s
 
     def get_synaptic_matrix_with_constraints(self) -> np.ndarray:
@@ -154,21 +159,24 @@ class TSPNet(Hopfield):
         Calculate the synaptic matrix based on the custom Energy function
         with constraints designed for the TSP.
         """
-        J = np.zeros((self.N, self.N, self.N, self.N+1))  # +1 for the bias
+        J = np.zeros((self.N, self.N, self.N, self.N + 1))  # +1 for the bias
         map_copy = self.road_map.city_set.copy()
         for X, city in enumerate(self.road_map):
             for i, day in enumerate(self.days):
                 for Y, city2 in enumerate(map_copy):
                     for j, day2 in enumerate(self.days):
-                        print(f'J{city}{day},{city2}{day2}')
-                        J[X][i][Y][j] =  \
-                            - A * Kronecker_delta(X, Y) * (1 - Kronecker_delta(i, j)) \
-                            - B * Kronecker_delta(i, j) * (1 - Kronecker_delta(X, Y)) \
-                            - C \
-                            - D * \
-                            self.road_map[city][city2] * \
-                            (Kronecker_delta(i-1, j) + Kronecker_delta(i+1, j))
-                        print(f'J{city}{day},{city2}{day2}: {J[X][i][Y][j]}')
+                        print(f"J{city}{day},{city2}{day2}")
+                        J[X][i][Y][j] = (
+                            -A * Kronecker_delta(X, Y) *
+                            (1 - Kronecker_delta(i, j))
+                            - B * Kronecker_delta(i, j) *
+                            (1 - Kronecker_delta(X, Y))
+                            - C
+                            - D
+                            * self.road_map[city][city2]
+                            * (Kronecker_delta(i - 1, j) + Kronecker_delta(i + 1, j))
+                        )
+                        print(f"J{city}{day},{city2}{day2}: {J[X][i][Y][j]}")
                     # Add the bias synapse to every neuron in the next layer
                     J[X][i][Y][self.N] = 2 * self.N * C
 
@@ -183,7 +191,7 @@ class TSPNet(Hopfield):
                                                      self.N + j] = J[X][i][Y][j]
                     # # add bias
                     # self.weights[X * self.N + i][self.N * self.N] = J[X][i][i][self.N]
-        print(f'weigh shape: {self.weights.shape}')
+        print(f"weigh shape: {self.weights.shape}")
         self.print_synaptic_matrix(J)
         return J
 
@@ -215,10 +223,10 @@ class TSPNet(Hopfield):
                 for Y, city2 in enumerate(self.road_map.city_set.copy()):
                     for j, day2 in enumerate(self.days):
                         print(
-                            f'J{city}{day},{city2}{day2}: {J[X][i][Y][j]:4}', end=' ')
+                            f"J{city}{day},{city2}{day2}: {J[X][i][Y][j]:4}", end=" ")
                     # print bias
-                    print(f'J{city}{day},bias: {J[X][i][i][self.N]}')
-                print('')
+                    print(f"J{city}{day},bias: {J[X][i][i][self.N]}")
+                print("")
 
     def get_energy_using_weight(self, s, map=None, only_dot_product=False) -> float:
         """

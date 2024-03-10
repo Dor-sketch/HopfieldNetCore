@@ -6,7 +6,7 @@ This is an ongoing project, and the GUI is being developed to support educationa
 
 
 <p align="center">
-  <img src="images/test/quality_animation_white.gif" alt="Network Animation" width="400">
+  <img src="images/tsp_ani.gif" alt="Network Animation" width="400">
 </p>
 
 ## Key Concepts 🗝️
@@ -18,7 +18,7 @@ This is an ongoing project, and the GUI is being developed to support educationa
 - **Diverse Applications**: The Hopfield network can be used for various tasks, including associative memory, optimization problems, and pattern recognition.
 
 <p align="center">
-  <img src="images/animation.gif" alt="TSP Route" width="400">
+  <img src="images/trans_animation.gif" alt="TSP Route" width="400">
 
   <b>Solving the Travelling Salesman Problem (TSP) using the network</b>
   <i>The Traveling Salesman Problem (TSP), or Hamiltonian cycle problem, is a classic optimization problem that is considered NP-hard. The problem involves finding the shortest possible route that visits each city exactly once and returns to the original city. The Hopfield network can be used to solve the TSP, providing a good approximation of the optimal solution in a reasonable amount of time. The network is initialized with synaptic weights that correspond to the problem's constraints, and no training is required. The network's energy function is designed to minimize the total distance of the route. The TSP file contains a custom implementation of the Hopfield network for the TSP, allowing users to visualize the network's state transitions and energy landscape as it solves the problem, and to plot the route.
