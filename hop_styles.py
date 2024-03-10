@@ -36,9 +36,9 @@ class HopStyles:
         # normalize widths, if very big graph make the edges smaller
         max_width = max(widths)
         if max_width != 0:
-            widths = [width / max_width * 10 for width in widths]
-        if len(widths) > 100:
-            widths = [width / 10 for width in widths]
+            widths = [width / max_width  for width in widths]
+        if len(widths) >= 100:
+            widths = [width / 40 for width in widths]
             widths = [width if width > 0.1 else 0.1 for width in widths]
         return colors, widths
 
@@ -48,7 +48,6 @@ class HopStyles:
         """
         if neurons is None:
             neurons = self.hopfield.neurons
-        print(f'in get_nodes_colors: {neurons}')
         return [
             ACTIVE_COLOR if neuron == 1 else IDLE_COLOR for neuron in list(neurons)
         ]

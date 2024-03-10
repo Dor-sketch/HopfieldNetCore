@@ -11,6 +11,7 @@ from hop_proof import proof_concept, generate_equation
 from hop_graph import HopGraph
 from hop_styles import HopStyles
 from hop_storage import HopStorage
+import random
 
 BUTTONS_COLOR = "lightblue"
 
@@ -20,13 +21,13 @@ class GUI:
     This class implements the GUI for the Hopfield network.
     """
 
-    def __init__(self, hopfield: Hopfield=None, N: int = 10):
+    def __init__(self, N, hopfield):
         self.hopfield = hopfield(N)
         self.from_node = None
-        self.N = N
+        self.N = N*N
         self.fig, self.ax = plt.subplots()
         self.graph = nx.Graph()
-        self.init_graph(N)
+        self.init_graph()
         self.bnext = None
         self.breset = None
         self.setup_buttons()
@@ -141,44 +142,7 @@ class GUI:
         Display the TSP solution (a route) in a new figure
         """
         # Assuming city_coords is a dictionary mapping city names to their coordinates
-        city_coords = {'X': (0, 0), 'Y': (1, 1), 'Z': (1, 0)}  # Replace with actual city coordinates
-
-        route = self.hopfield.get_route()
-
-        # Get the coordinates of the cities in the route
-        route_coords = [city_coords[city] for city in route]
-
-        # Unpack the city coordinates
-        x, y = zip(*route_coords)
-
-        # Create a new figure
-        fig, ax = plt.subplots()
-        fig.set_size_inches(8, 8)
-        fig.set_facecolor("white")
-        ax.set_facecolor("white")
-        ax.set_title(
-            "Traveling Salesman Problem",
-            fontsize=20,
-            color="blue",
-            fontweight="bold",
-            fontstyle="italic",
-            fontfamily="serif",
-        )
-
-        # Plot the cities
-        ax.plot(range(len(route)), route, 'o-')
-
-        # Set the labels
-        ax.set_xlabel('Day')
-        ax.set_ylabel('City')
-        ax.set_xticks(range(len(route)))
-        ax.set_xticklabels(route)
-        ax.set_yticks(range(len(route)))
-        ax.set_yticklabels(route)
-
-
-        # Show the plot
-        plt.show()
+        self.hopfield.road_map.plot_route(self.hopfield.get_route())
 
 
     def plot_three_d(self, event):
@@ -307,20 +271,24 @@ class GUI:
         with HopGraph(self.hopfield) as h:
             h.weights()
 
-    def init_graph(self, N):
+    def init_graph(self):
         """
         Draw the graph with the current state of the neurons
         """
+
+        N = self.N
 
         # Create nodes
         for i in range(N):
             self.graph.add_node(i)
 
+        print(f'self.hopfield.weights: {self.hopfield.weights}')
         # Create edges
         for i in range(N):
             for j in range(i + 1, N):
                 weight = self.hopfield.weights[i][j]
                 self.graph.add_edge(i, j, weight=weight, alpha=0.5, width=weight * 10)
+
 
         self.pos = nx.spring_layout(self.graph, seed=42, iterations=100)
         self.draw_graph()
@@ -340,6 +308,16 @@ class GUI:
             node_colors[self.from_node] = "red"
             edges_colors = ["red" if edge[0] == self.from_node else "black" for edge in self.graph.edges]
 
+        edges_colors = [(random.uniform(0.1, 0.2), 0,
+                         random.uniform(0.1, 0.2), 0.1)] * len(self.graph.edges)  # Initialize with default color
+
+        for i, edge in enumerate(self.graph.edges):
+            if self.hopfield.neurons[edge[0]] == 1:
+                # get random violet color
+                color = (random.uniform(0.4, 0.6), 0,
+                         random.uniform(0.4, 0.6), 0.5)
+                edges_colors[i] = color
+
         nx.draw_networkx(  # Draw the graph
             self.graph,
             self.pos,
@@ -348,7 +326,7 @@ class GUI:
             ax=self.ax,
             width=edge_widths,
             # node_size=node_sizes,
-            node_size=1000,
+            node_size= 2000 / self.N,
             edge_color=edges_colors,
         )
 
@@ -365,7 +343,7 @@ class GUI:
         self.ax.text(
             0.5,
             1,
-            f"Energy: {energy:.2f}",
+            f"Energy: {energy:.5f}",
 
             fontsize=12,
             color="black",
@@ -375,8 +353,9 @@ class GUI:
 
     def next(self, event):
         self.hopfield.next_state()
-        if self.hopfield.is_stable:
+        if self.hopfield.is_stable():
             print("Converged")
+            self.hopfield.road_map.plot_route(self.hopfield.get_route())
             self.bnext.label.set_text("Converged")
             self.bnext.label.set_color("green")
         else:
@@ -436,8 +415,3 @@ class GUI:
             duration=100,
             loop=0,
         )
-
-
-if __name__ == "__main__":
-    gui = GUI(10)
-    gui.run()

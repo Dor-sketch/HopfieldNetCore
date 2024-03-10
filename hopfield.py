@@ -6,11 +6,13 @@ Note the use of J as the weights matrix and sᵢ as the state of the neurons i.
 import numpy as np
 from hop_proof import subscript, print_eq
 
+
 def sign(x):
     if x >= 0:
         return 1
     else:
         return -1
+
 
 def binary_activation(x):
     if x > 0:
@@ -111,7 +113,8 @@ class Hopfield:
             # a state will be updated (s(t+1) = -s) iff sᵢ(t)•sgn(hᵢ(t)) < 0
             # where hᵢ(t) = Σj{ᵢⱼ}•sⱼ(t)
             # its equivalent to sᵢ(t)•hᵢ(t) < 0
-            new_state[i] = self.next_state_func(np.dot(self.weights[i], self.neurons))
+            new_state[i] = self.next_state_func(
+                np.dot(self.weights[i], self.neurons))
 
         if self.has_converged(new_state):
             self.is_stable = True

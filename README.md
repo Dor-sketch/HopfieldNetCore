@@ -1,4 +1,4 @@
-# Hopfield Network Visualizer 🧠
+# Hopfield Dynamics Visualizer: TSP Edition 🧠
 
 This tool is a graphical user interface (GUI) designed to visualize and interact with a Hopfield network, a type of recurrent artificial neural network used as a content-addressable memory system. The GUI provides a dynamic and interactive way to explore the network's behavior, including its state transitions, energy landscape, and pattern storage and retrieval capabilities.
 
@@ -6,7 +6,7 @@ This is an ongoing project, and the GUI is being developed to support educationa
 
 
 <p align="center">
-  <img src="images/test/quality_animation_white.gif" alt="Network Animation" width="600">
+  <img src="images/test/quality_animation_white.gif" alt="Network Animation" width="400">
 </p>
 
 ## Key Concepts 🗝️
@@ -15,6 +15,15 @@ This is an ongoing project, and the GUI is being developed to support educationa
 - **Neuron States (sᵢ)**: The state of neuron i, which can be either 1 or -1 (or 1 and 0 in the case of the TSP).
 - **Energy**: Reflects the current state's stability. Lower energy indicates a more stable or converged state.
 - **Overlap Value**: Measures the similarity between the network's current state and a stored pattern, aiding in pattern recognition.
+- **Diverse Applications**: The Hopfield network can be used for various tasks, including associative memory, optimization problems, and pattern recognition.
+
+<p align="center">
+  <img src="images/animation.gif" alt="TSP Route" width="400">
+
+  <b>Solving the Travelling Salesman Problem (TSP) using the network</b>
+  <i>The Traveling Salesman Problem (TSP), or Hamiltonian cycle problem, is a classic optimization problem that is considered NP-hard. The problem involves finding the shortest possible route that visits each city exactly once and returns to the original city. The Hopfield network can be used to solve the TSP, providing a good approximation of the optimal solution in a reasonable amount of time. The network is initialized with synaptic weights that correspond to the problem's constraints, and no training is required. The network's energy function is designed to minimize the total distance of the route. The TSP file contains a custom implementation of the Hopfield network for the TSP, allowing users to visualize the network's state transitions and energy landscape as it solves the problem, and to plot the route.
+  </i>
+</p>
 
 ## Features
 
@@ -23,6 +32,8 @@ This is an ongoing project, and the GUI is being developed to support educationa
 - **Dynamic Controls**: Utilize interactive buttons to manipulate the network's state, analyze its properties, and explore theoretical concepts.
 - **Educational Insights**: Access detailed explanations and mathematical equations that underpin the network's operations, enhancing understanding of neural network dynamics.
 - **Advanced Visualizations**: Explore the network in 3D and create GIFs to visualize the network's state changes over time.
+
+Note: This project is still under development, and some features may be incomplete or subject to change.
 
 <p align="center">
   <img src="images/energy_func_visu.png" alt="Energy Function Visualization" width="400">
@@ -73,10 +84,6 @@ def get_synaptic_matrix_with_constraints(self, dist=DIST) -> np.ndarray:
 ```
 
 The solution implementation was based on the litterature. The network energy function was designed to minimize the total distance of the route. Note that the network is not guaranteed to find the optimal solution, but it can provide a good approximation. Also note that no training is required for the TSP, as the network is initialized with synaptic weights that correspond to the problem's constraints.
-
-<p align="center">
-  <img src="images/TSP.png" alt="TSP Route" width="600">
-</p>
 
 ## Installation 📦
 

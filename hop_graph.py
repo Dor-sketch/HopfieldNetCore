@@ -13,7 +13,11 @@ from scipy.interpolate import griddata
 class HopGraph:
     def __init__(self, hopfield):
         self.hopfield = hopfield
-        self.N = hopfield.N
+        if hasattr(hopfield, "road_map"):
+            self.N = hopfield.N * hopfield.N
+        else:
+            self.N = hopfield.N
+
 
     def __enter__(self):
         return self
@@ -69,13 +73,19 @@ class HopGraph:
         # Number of neurons
         n = self.N
 
-        # Generate all possible states
-        states = np.array(
-            [
-                [1 if x == "1" else -1 for x in format(i, "0" + str(n) + "b")]
-                for i in range(2**n)
-            ]
-        )
+        if hasattr(self.hopfield, "road_map"):
+            states = list(itertools.product([0, 1], repeat=100))
+            states = np.array(states)
+            states = np.where(states == 0, -1, states)
+        else:
+            # Generate all possible states
+            states = np.array(
+                [
+                    [1 if x == "1" else -1 for x in format(i, "0" + str(n) + "b")]
+                    for i in range(2**n)
+                ]
+            )
+
         # Calculate the energy for each state
         energies = np.array([self.hopfield.get_energy(state) for state in states])
         is_stored = np.array(
