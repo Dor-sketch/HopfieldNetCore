@@ -31,14 +31,14 @@ class HopStyles:
                     colors.append((weight, 0, weight, weight))
                 else:
                     colors.append((0.5, 0.5, 0.5, abs(weight)))
-                widths.append(abs(weight) * 10)
+                widths.append(abs(weight) * 100)
 
         # normalize widths, if very big graph make the edges smaller
         max_width = max(widths)
         if max_width != 0:
-            widths = [width / max_width for width in widths]
+            widths = [50*width / max_width for width in widths]
         if len(widths) >= 100:
-            widths = [width / 40 for width in widths]
+            widths = [width / 20 for width in widths]
             widths = [width if width > 0.1 else 0.1 for width in widths]
         return colors, widths
 

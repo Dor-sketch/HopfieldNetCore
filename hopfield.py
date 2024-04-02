@@ -64,6 +64,20 @@ class Hopfield:
         self.is_stable = False
         self.t = 0
 
+    def stable(self):
+        """
+        Returns true if the network has converged to a stable state.
+        """
+        return self.is_stable
+
+    def reset(self):
+        """
+        Reset the network to its initial state.
+        """
+        self.neurons = np.random.choice([1, -1], self.N)
+        self.is_stable = False
+        self.t = 0
+
     @ print_eq
     def overlap_value(self, stored_pattern):
         """
@@ -138,7 +152,13 @@ class Hopfield:
         """
         if network_state is None:
             network_state = self.neurons
-        return -(1 / 2) * self.weights[i][j] * network_state[i] * network_state[j]
+        # Ensure i and j are within the valid range of indices
+        if i < len(self.weights) and j < len(self.weights[i]):
+            weight = self.weights[i][j]
+        else:
+            print(f"Invalid index: i={i}, j={j}")
+            return
+        return -(1 / 2) * weight * network_state[i] * network_state[j]
 
     def getLocalField(self, i):
         """

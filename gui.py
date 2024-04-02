@@ -23,7 +23,8 @@ class GUI:
     def __init__(self, N, hopfield):
         self.hopfield = hopfield(N)
         self.from_node = None
-        self.N = N*N
+        # if using multidimensional ways, multiple neurons to be displayed
+        self.N = N # for TSP N*N
         self.fig, self.ax = plt.subplots()
         self.graph = nx.Graph()
         self.init_graph()
@@ -274,7 +275,6 @@ class GUI:
         """
         Draw the graph with the current state of the neurons
         """
-
         N = self.N
 
         # Create nodes
@@ -285,8 +285,12 @@ class GUI:
         # Create edges
         for i in range(N):
             for j in range(i + 1, N):
-                weight = self.hopfield.weights[i][j]
-                self.graph.add_edge(i, j, weight=weight, alpha=0.5, width=weight * 10)
+                # Ensure i and j are within the valid range of indices
+                if i < len(self.hopfield.weights) and j < len(self.hopfield.weights[i]):
+                    weight = (self.hopfield.weights[i][j] + self.hopfield.weights[j][i]) / 2
+                    self.graph.add_edge(i, j, weight=weight, alpha=0.5, width=weight * 10)
+                else:
+                    print(f"Invalid indices: i={i}, j={j}")
 
 
         self.pos = nx.spring_layout(self.graph, seed=42, iterations=100)
@@ -324,8 +328,8 @@ class GUI:
             with_labels=True,
             ax=self.ax,
             width=edge_widths,
-            # node_size=node_sizes,
-            node_size= 2000 / self.N,
+            node_size=node_sizes,
+            # node_size= 2000 / self.N,
             edge_color=edges_colors,
         )
 
@@ -342,7 +346,7 @@ class GUI:
         self.ax.text(
             0.5,
             1,
-            f"Energy: {energy:.5f}",
+            f"Energy: {energy}",
 
             fontsize=12,
             color="black",
@@ -352,9 +356,11 @@ class GUI:
 
     def next(self, event):
         self.hopfield.next_state()
-        if self.hopfield.is_stable():
+        if self.hopfield.stable():
             print("Converged")
-            self.hopfield.road_map.plot_route(self.hopfield.get_route())
+            # check if has attribute plot_solution
+            if hasattr(self.hopfield, "plot_solution"):
+                self.hopfield.plot_solution()
             self.bnext.label.set_text("Converged")
             self.bnext.label.set_color("green")
         else:
