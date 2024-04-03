@@ -75,13 +75,13 @@ The basic functionalities of the Hopfield Dynamics Visualizer include:
   <p align="center">
     Energy Function Visualization
     <br>
-    <img src="images/energy_func_visu.png" alt="Energy Function Visualization" width="400">
+    <img src="images/energy_func_visu.png" alt="Energy Function Visualization" width="350">
 
-    <img src="images/land.png" alt="Landscape Visualization" width="400">
+    <img src="images/land.png" alt="Landscape Visualization" width="350">
      <br>
-    <img src="images/land2.png" alt="Landscape Visualization" width="400">
+    <img src="images/land2.png" alt="Landscape Visualization" width="350">
 
-    <img src="images/v.png" alt="3D Visualization" width="400">
+    <img src="images/v.png" alt="3D Visualization" width="350">
   </p>
 
 Note: This project is still under development, and some features may be incomplete or subject to change.
@@ -98,45 +98,82 @@ For a custum implementation, you can add your own subclass of the `HopfieldNetwo
 
 ### N-Queens - New addition
 
+<p align="center">
+  <img src="images/new_design.png" alt="New Design" width="500">
+  <br>
+  <i>The new design of the GUI for the Hopfield network, featuring a clean and intuitive interface for interacting with the network.</i>
+</p>
+
 The latest addition to the project is the N-Queens problem, a classic combinatorial optimization problem that involves placing N queens on an N×N chessboard such that no two queens attack each other (see [Wikipedia](https://en.wikipedia.org/wiki/Eight_queens_puzzle)). The N-Queens problem is a well-known problem in computer science and artificial intelligence, and it can be solved using various algorithms, including constraint satisfaction, backtracking, and genetic algorithms.
 
 As can be seen in the following GIFs, the network is capable to solve the N-Queens problem for different board sizes.
 
 <p align="center">
-  <img src="images/q8.gif" alt="8-Queens Animation" width="300">
-  <img src="images/q16.gif" alt="16-Queens Animation" width="300">
-  <img src="images/q32.gif" alt="32-Queens Animation" width="300">
+  <img src="images/q8.gif" alt="8-Queens Animation" width="250">
+  <img src="images/q16.gif" alt="16-Queens Animation" width="250">
   <br>
-  <i>Visualizing the solution of the N-Queens problem using the Hopfield network for different board sizes: 8-Queens, 16-Queens, and 32-Queens</i>
+  <img src="images/q32.gif" alt="32-Queens Animation" width="250">
+  <img src="images/64q.png" alt="64-Queens Animation" width="250">
+  <br>
+  <i>Visualizing the solution of the N-Queens problem using the Hopfield network for different board sizes: 8-Queens, 16-Queens, and 32-Queens. The network also solves the 64-Queens problem, but the visualization is not shown here due to space constraints.</i>
+</p>
 
 The Hopfield network can be used to solve the N-Queens problem by encoding the constraints of the problem in the network's energy function. The network is initialized with synaptic weights that correspond to the problem's constraints, and no training is required. The network's energy function is designed to minimize the number of conflicts between queens, resulting in a valid solution to the N-Queens problem.
 
 ```python
 # from n_queens import NQueensNetwork
-    def get_synaptic_matrix(self):
-        """Construct a synaptic matrix that penalizes queens threatening each other."""
-        J = np.zeros((self.size, self.size, self.size, self.size))
-        for i in range(self.size):
-            for j in range(self.size):
-                for k in range(self.size):
-                    for l in range(self.size):
-                        if i != k or j != l:  # Skip the same queen
-                            J[i, j, k, l] = (
-                                -ROW_PENALTY *
-                                Kronecker_delta(i, k) *
-                                (1 - Kronecker_delta(j, l))
-                                - COL_PENALTY *
-                                (1 - Kronecker_delta(i, k)) *
-                                Kronecker_delta(j, l)
-                                - DIAG_PENALTY *
-                                Kronecker_delta(abs(i - k), abs(j - l))
-                            )
-        return J
+def get_synaptic_matrix(self):
+    """Construct a synaptic matrix that penalizes queens threatening each other."""
+    J = np.zeros((self.size, self.size, self.size, self.size))
+    for i in range(self.size):
+        for j in range(self.size):
+            for k in range(self.size):
+                for l in range(self.size):
+                    if i != k or j != l:  # Skip the same queen
+                        J[i, j, k, l] = (
+                            -ROW_PENALTY *
+                            Kronecker_delta(i, k) *
+                            (1 - Kronecker_delta(j, l))
+                            - COL_PENALTY *
+                            (1 - Kronecker_delta(i, k)) *
+                            Kronecker_delta(j, l)
+                            - DIAG_PENALTY *
+                            Kronecker_delta(abs(i - k), abs(j - l))
+                        )
+    return J
+```
+
+Or using `Pytorch` tensors:
+
+```python
+
+def get_synaptic_matrix(self):
+    """Construct a synaptic matrix that penalizes queens threatening each other."""
+    indices = torch.arange(self.size)
+    i, j, k, l = torch.meshgrid(indices, indices, indices, indices)
+    row_penalty = -ROW_PENALTY * (i == k) * (j != l)
+    col_penalty = -COL_PENALTY * (i != k) * (j == l)
+    diag_penalty = -DIAG_PENALTY * (abs(i - k) == abs(j - l))
+    J = row_penalty + col_penalty + diag_penalty
+    # Set diagonal elements to 0
+    J[(i == k) & (j == l)] = 0
+    return J
 ```
 
 As shown in the code snippet above, the synaptic matrix is constructed to penalize queens that threaten each other. The network's energy function is designed to minimize the number of conflicts between queens, resulting in a valid solution to the N-Queens problem. The network can be visualized using the GUI, allowing users to interact with the network and observe its state transitions and energy landscape as it solves the N-Queens problem.
 
-The network employs `Simulated Annealing` through `asynchronous updates` to avoid getting stuck in local minima. The network will randomly select a neuron to update at each step, allowing it to explore different states and avoid getting stuck in local minima.
+The energy function utilizes `tensors` to calculate the energy of a state, which is the sum of the interactions between queens. The energy is then normalized by dividing by 2, as each interaction is counted twice.
+
+```python
+def get_energy(self, s=None):
+    """Calculate the energy of a state."""
+    if s is None:
+        s = self.s
+    energy = torch.sum(self.J * torch.tensordot(s, s, dims=0))
+    return -energy / 2  # Because each interaction is counted twice
+```
+
+The update rule for the network is based on the energy function, where the network transitions to a new state that minimizes the energy. The network employs `Simulated Annealing` through `asynchronous updates` to avoid getting stuck in local minima. The network will randomly select a neuron to update at each step, allowing it to explore different states and avoid getting stuck in local minima. The network is initialized with a random state. It will then converge to a valid solution for the N-Queens problem, where no two queens threaten each other, regardless of the initial state. This is achieved by applying an update only if the new state has lower energy, or with a probability that decreases with the energy difference and the temperature. The temperature is used to control the probability of accepting a worse state, which allows the network to explore different states and avoid getting stuck in local minima. The following code snippet shows the `next_state` method implementation using `numpy` arrays. For the newer `Pytorch` implementation, please check the `n_queens.py` file.
 
 ```python
 def next_state(self, s=None, T=1.0):
@@ -185,9 +222,9 @@ def next_state(self, s=None, T=1.0):
     return s
 ```
 
-the network is initialized with a random state. The network will then converge to a valid solution to the N-Queens problem, where no two queens threaten each other.
+To see the network in action, run the `q_gui.py` file and interact with the GUI to observe the network's behavior as it solves the N-Queens problem. Note that in order to use this feature, you need to have the necessary libraries installed: pygame and pygame.gfxdraw, and one of the following libraries: numpy or Pytorch (for the newer implementation).
 
-To see the network in action, run the `q_gui.py` file and interact with the GUI to observe the network's behavior as it solves the N-Queens problem. Note that in order to use this feature, you need to have the necessary libraries installed: pygame, numpy, and pygame.gfxdraw.
+---
 
 ### Solving TSP
 
