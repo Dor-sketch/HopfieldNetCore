@@ -22,6 +22,7 @@ class QueensNet(Hopfield):
         self.neurons = self.s.flatten()
         self.J = self.get_synaptic_matrix()
         self.external_iterations = 0
+        self.energy = self.get_energy()
 
     def reset(self):
         self.s = self.get_random_state()
@@ -72,22 +73,24 @@ class QueensNet(Hopfield):
                     print(".", end=" ")
             print()
         print()
-
     def next_state(self, s=None, T=2.0):
         """
         Calculate the next state of the network
         """
-        start_energy = self.get_energy()
+        start_energy = self.energy
         if start_energy == 0:
             print(f'Solution found in {self.external_iterations} ext iterations')
             return self.s
         s = self.s.clone()  # Create a copy of the state to avoid modifying the original state
-        iterations = self.size ** 2 * 5
+        iterations = self.size ** 2  * 10
         #  pre generate random idxs for each iteration
         idxs = torch.randperm(self.size).repeat(self.size)
 
         # Simulated annealing
         for it in range(min(iterations, len(idxs))):
+            # Decrease T gradually
+            T = T * 0.99
+
             # Select a row at random
             if it < len(idxs):
                 i = idxs[it]
@@ -97,8 +100,15 @@ class QueensNet(Hopfield):
                 break
             current_col = torch.argmax(s[i])
 
-            # Try moving the queen to a random column
-            new_col = torch.randint(0, self.size, (1,)).item()
+            # Check if there are any rows or columns without queens
+            empty_cols = (s.sum(dim=0) == 0).nonzero(as_tuple=True)[0]
+            if empty_cols.nelement() > 0:
+                # Move the queen to an empty column
+                new_col = empty_cols[torch.randint(0, empty_cols.nelement(), (1,)).item()]
+            else:
+                # Try moving the queen to a random column
+                new_col = torch.randint(0, self.size, (1,)).item()
+
             s[i, current_col].zero_()  # In-place zero
             s[i, new_col].fill_(1)  # In-place fill
             new_energy = self.get_energy(s)
@@ -107,6 +117,7 @@ class QueensNet(Hopfield):
             # Otherwise, accept it with a probability that decreases with the energy difference and the temperature
             if new_energy < start_energy or torch.rand(1).item() < torch.exp((start_energy - new_energy) / T):
                 start_energy = new_energy
+                self.energy = new_energy
             else:
                 # Move the queen back to the original column
                 s[i, new_col].zero_()  # In-place zero
@@ -124,7 +135,6 @@ class QueensNet(Hopfield):
         self.s.copy_(s)  # In-place copy
         self.print_queens(s)
         return s
-
 
     def print_synaptic_matrix(self, J):
         with open('synaptic_matrix.txt', 'w') as f:
