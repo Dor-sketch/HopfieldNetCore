@@ -3,7 +3,8 @@ This module contains the implementation of a Hopfield network that solves the 8-
 """
 
 import torch
-from hopfield import Hopfield
+# comenting out the import of Hopfield class
+# from hopfield import Hopfield
 
 def Kronecker_delta(i, j):
     return 1 if i == j else 0
@@ -14,27 +15,36 @@ COL_PENALTY = 100
 DIAG_PENALTY = 100
 
 
-class QueensNet(Hopfield):
+class QueensNet:
     def __init__(self, size=8):
         self.size = size  # Number of queens
-        self.N = size ** 2  # Number of neurons, +1 for the bias neuron
+        self.N = size ** 2
         self.s = self.get_random_state()
-        self.neurons = self.s.flatten()
+        # self.neurons = self.s.flatten()
         self.J = self.get_synaptic_matrix()
         self.external_iterations = 0
         self.energy = self.get_energy()
+        self.missing_queens = 0
 
     def reset(self):
-        self.s = self.get_random_state()
-        self.neurons = self.s.flatten()
+        # print("Resetting the network")
+        indices = self.get_random_indices()
+        self.s = torch.zeros((self.size, self.size))
+        self.s[torch.arange(self.size), indices] = 1
         self.external_iterations = 0
+        self.energy = self.get_energy()
+        self.missing_queens = 0
 
     def get_random_state(self):
         """Initialize a random state with exactly one queen per row."""
         state = torch.zeros((self.size, self.size))
-        indices = torch.randperm(self.size)
+        indices = self.get_random_indices()
         state[torch.arange(self.size), indices] = 1
         return state
+
+    def get_random_indices(self):
+        """Generate random indices for the state."""
+        return torch.randperm(self.size)
 
     def get_synaptic_matrix(self):
         """Construct a synaptic matrix that penalizes queens threatening each other."""
@@ -79,7 +89,7 @@ class QueensNet(Hopfield):
         """
         start_energy = self.energy
         if start_energy == 0:
-            print(f'Solution found in {self.external_iterations} ext iterations')
+            # print(f'Solution found in {self.external_iterations} ext iterations')
             return self.s
         s = self.s.clone()  # Create a copy of the state to avoid modifying the original state
         iterations = self.size ** 2  * 10
@@ -124,16 +134,14 @@ class QueensNet(Hopfield):
                 s[i, current_col].fill_(1)  # In-place fill
 
             if start_energy == 0:
-                print(
-                    f'Solution found in {self.external_iterations} iterations')
                 yield s
                 break
             yield s
 
         self.external_iterations += 1
-        self.neurons.copy_(s.flatten())  # In-place copy
+        # self.neurons.copy_(s.flatten())  # In-place copy
         self.s.copy_(s)  # In-place copy
-        self.print_queens(s)
+        # self.print_queens(s)
         return s
 
     def print_synaptic_matrix(self, J):
