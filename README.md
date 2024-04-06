@@ -22,6 +22,7 @@ This is an ongoing project, and the GUI is being developed to support educationa
 - [Installation](#installation)
 - [Contributing](#contributing)
 - [License](#license)
+- [Gallery](#gallery)
 
 ---
 
@@ -72,6 +73,14 @@ The basic functionalities of the Hopfield Dynamics Visualizer include:
 - **Educational Insights**: Access detailed explanations and mathematical equations that underpin the network's operations, enhancing understanding of neural network dynamics.
 - **Advanced Visualizations**: Explore the network in 3D and create GIFs to visualize the network's state changes over time.
 
+  <p align = "center">
+    <i>Energy Landscape Visualization of the 8-Queens Problem using interpolation. Each dot represents a state, with the color indicating the energy level. Red dots represent global minimums. For more pictures see the gallery section.</i>
+    <br>
+    <img src="images/screenshots/land1.png" alt="Energy Landscape Visualization" width="350">
+    <img src="images/screenshots/land2.png" alt="Energy Landscape Visualization" width="350">
+    <img src="images/screenshots/land3.png" alt="Energy Landscape Visualization" width="350">
+  </p>
+
   <p align="center">
     Energy Function Visualization
     <br>
@@ -104,7 +113,13 @@ For a custum implementation, you can add your own subclass of the `HopfieldNetwo
   <i>The new design of the GUI for the Hopfield network, featuring a clean and intuitive interface for interacting with the network.</i>
 </p>
 
-The latest addition to the project is the N-Queens problem, a classic combinatorial optimization problem that involves placing N queens on an N×N chessboard such that no two queens attack each other (see [Wikipedia](https://en.wikipedia.org/wiki/Eight_queens_puzzle)). The N-Queens problem is a well-known problem in computer science and artificial intelligence, and it can be solved using various algorithms, including constraint satisfaction, backtracking, and genetic algorithms.
+The latest addition to the project is the N-Queens problem, a classic combinatorial optimization problem that involves placing N queens on an N×N chessboard such that no two queens attack each other (see [Wikipedia](https://en.wikipedia.org/wiki/Eight_queens_puzzle)). The N-Queens problem is a well-known problem in computer science and artificial intelligence, and it can be solved using various algorithms, including constraint satisfaction, backtracking, and genetic algorithms. Note that the main difficulty in solving the N-Queens problem is not to find a solution but to find all possible solutions, or to find a solution given a specific initial state.
+
+<p align="center">
+  <img src="images/screenshots/trivial_solution.png" alt="Trivial Solution" width="500">
+  <br>
+  <i>Trivial solution to the 8-Queens problem, where each queen is placed in a separate row and column.</i>
+</p>
 
 As can be seen in the following GIFs, the network is capable to solve the N-Queens problem for different board sizes.
 
@@ -278,3 +293,48 @@ Contributions are welcome! If you have suggestions for improvements or new featu
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
+
+
+## Gallery
+
+<p align="center">
+  <i>Visualizing the solution of the 8-Queens problem using the Hopfield network</i>
+  <br>
+  <img src="images/magma.gif" alt="Energy Function Visualization" width="350">
+</p>
+
+<p align="center">
+  <i>Visualizing the solution of the 8-Queens problem using the Hopfield network</i>
+  <br>
+  <img src="images/screenshots/q_e_1.png" alt="Energy Function Visualization" width="350">
+  <img src="images/screenshots/q_e_2.png" alt="Energy Function Visualization" width="350">
+  <img src="images/screenshots/q_e_3.png" alt="Energy Function Visualization" width="350">
+  <img src="images/screenshots/q_e_4.png" alt="Energy Function Visualization" width="350">
+  <img src="images/screenshots/q_e_5.png" alt="Energy Function Visualization" width="350">
+  <img src="images/screenshots/q_e_6.png" alt="Energy Function Visualization" width="350">
+  <img src="images/screenshots/q_e_7.png" alt="Energy Function Visualization" width="350">
+  <br>
+  <img src="images/screenshots/q_e_8.png"
+  alt="Energy Function Visualization" width="350">
+  <br>
+  Navigating the Energy Landscape of the 8-Queens Problem
+  <br>
+  <img src="images/screenshots/screenshot_close.png" alt="Energy Landscape Visualization" width="350">
+  <img src="images/screenshots/screenshot_no_grid.png" alt="Energy Landscape Visualization" width="350">
+  <img src="images/screenshots/screen_dark.png" alt="Energy Landscape Visualization" width="350">
+  <img src="images/screenshots/screen_dark2.png" alt="Energy Landscape Visualization" width="350">
+</p>
+
+<p align="center">
+  <img src="images/screenshots/land7.png" alt="Energy Landscape Visualization" width="350">
+  <img src="images/screenshots/land8.png" alt="Energy Landscape Visualization" width="350">
+  <img src="images/screenshots/land9.png" alt="Energy Landscape Visualization" width="350">
+  <img src="images/screenshots/land11.png" alt="Energy Landscape Visualization" width="350">
+  <img src="images/screenshots/land111.png" alt="Energy Landscape Visualization" width="350">
+  <img src="images/screenshots/land_exploser.png" alt="Energy Landscape Visualization" width="350">
+  <img src="images/screenshots/land_v.png" alt="Energy Landscape Visualization" width="350">
+  <img src="images/screenshots/palsma_cover.png" alt="Energy Landscape Visualization" width="350">
+  <img src="images/screenshots/plas1.png" alt="Energy Landscape Visualization" width="350">
+  <img src="images/screenshots/plasma_comver2.png" alt="Energy Landscape Visualization" width="350">
+  <img src="images/screenshots/plasma333.png" alt="Energy Landscape Visualization" width="350">
+</p>
