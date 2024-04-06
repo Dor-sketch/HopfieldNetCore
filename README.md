@@ -4,7 +4,6 @@ This tool is a graphical user interface (GUI) designed to visualize and interact
 
 This is an ongoing project, and the GUI is being developed to support educational purposes, allowing users to understand the network's dynamics and properties through visual feedback and interactive controls. Custom implementations of the Hopfield network's functionalities are used to provide a comprehensive and intuitive learning experience. For example, see the `TSP (Travelling Salesman Problem)` file for a Hopfield network implementation for the TSP, or the `N-Queens` file for a Hopfield network implementation for the N-Queens problem.
 
-
 <p align="center">
   <img src="images/q8.gif" alt="Network Animation" width="300">
   <img src="images/tsp_ani.gif" alt="Network Animation" width="400">
@@ -76,9 +75,9 @@ The basic functionalities of the Hopfield Dynamics Visualizer include:
   <p align = "center">
     <i>Energy Landscape Visualization of the 8-Queens Problem using interpolation. Each dot represents a state, with the color indicating the energy level. Red dots represent global minimums. For more pictures see the gallery section.</i>
     <br>
-    <img src="images/screenshots/land1.png" alt="Energy Landscape Visualization" width="350">
+    <img src="images/screenshots/land1.png" alt="Energy Landscape Visualization" width="450">
+    <img src="images/screenshots/land3.png" alt="Energy Landscape Visualization" width="360">
     <img src="images/screenshots/land2.png" alt="Energy Landscape Visualization" width="350">
-    <img src="images/screenshots/land3.png" alt="Energy Landscape Visualization" width="350">
   </p>
 
   <p align="center">
@@ -239,6 +238,14 @@ def next_state(self, s=None, T=1.0):
 
 To see the network in action, run the `q_gui.py` file and interact with the GUI to observe the network's behavior as it solves the N-Queens problem. Note that in order to use this feature, you need to have the necessary libraries installed: pygame and pygame.gfxdraw, and one of the following libraries: numpy or Pytorch (for the newer implementation).
 
+You can also run the N-Queens puzzle without the neural network by running the `q_light.py` file. This file contains an interactive graphical interface that allows you to place queens on the board and check for conflicts. Press a queen to pick it up, and press an empty square to place it.
+
+<p align="center">
+  <img src="images/q_light1.png" alt="N-Queens Light" width="400">
+  <img src="images/q_light2.png" alt="N-Queens Light" width="400">
+  <br>
+  <i>Interactive graphical interface for the N-Queens puzzle without the neural network. Place queens on the board and check for conflicts.</i>
+
 ---
 
 ### Solving TSP
@@ -293,7 +300,6 @@ Contributions are welcome! If you have suggestions for improvements or new featu
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
-
 
 ## Gallery
 
