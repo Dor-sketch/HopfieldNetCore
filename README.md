@@ -344,3 +344,9 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
   <img src="images/screenshots/plasma_comver2.png" alt="Energy Landscape Visualization" width="350">
   <img src="images/screenshots/plasma333.png" alt="Energy Landscape Visualization" width="350">
 </p>
+
+<p align="center">
+  <img src="images/land_vallies.png" alt="Energy Landscape Visualization" width="350">
+  <img src="images/disk2.png" alt="Energy Landscape Visualization" width="350">
+  <img src="images/disk_world.png" alt="Energy Landscape Visualization" width="350">
+</p>

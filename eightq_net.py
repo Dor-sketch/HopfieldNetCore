@@ -3,12 +3,12 @@ This module contains the implementation of a Hopfield network that solves the 8-
 """
 from matplotlib.offsetbox import AnchoredText
 import matplotlib.pyplot as plt
-import numpy as np
 from matplotlib import cm
 from matplotlib.colors import Normalize
+import numpy as np
 from sklearn.manifold import TSNE
 import torch
-from joblib import Parallel, delayed
+# from joblib import Parallel, delayed
 from scipy.interpolate import griddata
 
 # comenting out the import of Hopfield class
@@ -25,6 +25,36 @@ DIAG_PENALTY = 100
 WHITE_Q = '\u2655'
 BLACK_Q = '\u265B'
 
+def calculate_energy(s, J):
+    """Calculate the energy of each state using torch.einsum."""
+    s = s.float()  # Convert s to Float
+    J = J.float()  # Convert J to Float
+    energy = torch.einsum('ijkl,bij,bkl->b', J, s, s)
+    return -energy / 2  # Because each interaction is counted twice
+
+def calculate_zero_energy_states(s, J):
+    """Calculate the energy of each state using torch.einsum and return only the states with zero energy."""
+    energy = calculate_energy(s, J)
+
+    # Create a mask that is True where the energy is zero
+    mask = energy == 0
+
+    # Use the mask to select the states with zero energy
+    zero_energy_states = s[mask]
+
+    return zero_energy_states
+
+def generate_many_states(n, size=8):
+    """Generate many states for the 8-queens problem."""
+    # Initialize a tensor of zeros
+    states = torch.zeros(n, size, size)
+
+    # Generate a tensor of random column indices for each state and each row
+    indices = torch.randint(0, size, (n, size))
+
+    # Use one-hot encoding to place the queens at the generated indices
+    states.scatter_(2, indices.unsqueeze(-1), 1)
+    return states
 
 class QueensNet:
     def __init__(self, size=8):
@@ -94,30 +124,30 @@ class QueensNet:
         """
         if s is None:
             s = self.s
-        for i in range(self.size):
-            for j in range(self.size):
-                if s[i, j] == 1:
-                    print(BLACK_Q, end=" ")
-                else:
-                    print(".", end=" ")
-            print()
-        print()
 
-    def get_queens_string(self, s=None):
-        """
-        Display the queens on the board graphically
-        """
-        if s is None:
-            s = self.s
-        queens = ""
-        for i in range(self.size):
-            for j in range(self.size):
-                if s[i, j] == 1:
-                    queens += BLACK_Q + "  "
-                else:
-                    queens += ".  "
-            queens += "\n"
-        return queens.rstrip()  # Remove trailing whitespace
+        print(self.get_queens_string(s))
+
+    # def get_queens_string(self, s=None):
+    #     """
+    #     Display the queens on the board graphically
+    #     """
+    #     if s is None:
+    #         s = self.s
+
+    #     # Convert the tensor to a string representation
+    #     s_str = torch.where(s == 1, BLACK_Q + "  ", ".  ")
+
+    #     # Join the elements of each row into a single string
+    #     s_str = [''.join(row) for row in s_str]
+
+    #     # Join the rows into a single string and remove trailing whitespace
+    #     queens = '\n'.join(s_str).rstrip()
+
+    #     return queens
+    def get_queens_string(self, s):
+        s = s.view(self.size, -1).numpy()  # Reshape the tensor to a 2D array and convert it to a numpy array
+        s_str = np.where(s == 1, BLACK_Q + "  ", ".  ")
+        return "\n".join("".join(row).rstrip(" ") for row in s_str)
 
     def next_state(self, s=None, T=2.0):
         """
@@ -197,30 +227,18 @@ class QueensNet:
         field = torch.sum(self.J[X, i] * s)
         s[X, i] = 1 if (field > 0) else 0
 
-    def calculate_energy(self):
-        """Calculate the energy of the current state."""
-        energy = torch.sum(
-            self.J * self.s.unsqueeze(-1).unsqueeze(-1) * self.s)
-        return energy / 2  # Because each interaction is counted twice
 
-
-
-
-
-    def print_queens_energy_3d(self, s=None, sample_size = 10000):
+    def print_queens_energy_3d(self, s=None, sample_size = 1000):
         if s is None:
             s = self.s
         x_size = int(np.sqrt(sample_size))
+        sample_size = x_size * x_size
 
-        # Generate all possible states for a single queen using numpy
-        sampled_states = [self.get_random_indices() for _ in range(x_size * x_size)]
-
-        # Convert the list of states to a numpy array
-        states_array = np.array(sampled_states)
-
+        states = generate_many_states(sample_size, self.size)
+        sampled_states = states.view(sample_size, -1)
         # Use t-SNE to reduce the dimensionality to 2
-        tsne = TSNE(n_components=2, perplexity=50, learning_rate=100, n_iter=2000, random_state=42)
-        states_2d = tsne.fit_transform(states_array)
+        tsne = TSNE(n_components=2, perplexity=50, learning_rate=100, n_iter=1000, random_state=42)
+        states_2d = tsne.fit_transform(states.view(sample_size, -1).numpy())
 
         # Now, states_2d is a 2D representation of your states
         grid_x, grid_y = states_2d[:, 0], states_2d[:, 1]
@@ -234,14 +252,19 @@ class QueensNet:
         self.zero_energy_states = []
 
         # Calculate the energy for the sampled states in parallel
-        energies = Parallel(n_jobs=-1)(delayed(lambda state: self.get_energy(self.place_queen(s, state)))(state) for state in sampled_states)
-        for i, energy in enumerate(energies):
-            # Store the energy in grid_z
-            grid_z[i // x_size, i % x_size] = energy
+        # energies = Parallel(n_jobs=-1)(delayed(lambda state: self.get_energy(self.place_queen(s, state)))(state) for state in sampled_states)
 
-            # If the energy is zero, store the state
-            if energy == 0:
-                self.zero_energy_states.append(sampled_states[i])
+        energies = calculate_energy(states, self.J)
+
+        # Reshape energies and assign it to grid_z
+        grid_z = energies.view(x_size, -1)
+
+        # Use a mask to select the zero-energy states
+        mask = energies == 0
+        zero_energy_states = sampled_states[mask]
+
+        # Append the zero-energy states to self.zero_energy_states
+        self.zero_energy_states.extend(zero_energy_states)
 
         # Create a grid of points where you want to estimate z-values
         grid_x_new, grid_y_new = np.mgrid[grid_x.min():grid_x.max():100j, grid_y.min():grid_y.max():100j]
@@ -249,8 +272,7 @@ class QueensNet:
         # Interpolate z-values for the new grid points
         grid_z_new = griddata((grid_x.flatten(), grid_y.flatten()), grid_z.flatten(), (grid_x_new, grid_y_new), method='cubic')
 
-
-        fig = plt.figure(figsize=(18, 12))  # Adjust the size as needed
+        fig = plt.figure(figsize=(14, 12))  # Adjust the size as needed
         plt.axis('off')
 
         plt.subplots_adjust(left=0, right=1, top=1, bottom=0, wspace=0, hspace=0)
@@ -259,11 +281,10 @@ class QueensNet:
         ax.set_facecolor('black')
 
         norm = Normalize(grid_z.min(), grid_z.max())
-        colors = cm.magma(norm(grid_z.flatten()))
-        colors_new = cm.magma(norm(grid_z_new.flatten()))
+        colors = cm.plasma(norm(grid_z.flatten()))
+        colors_new = cm.plasma(norm(grid_z_new.flatten()))
         colors[grid_z.flatten() == 0] = [1, 0, 0, 1]  # RGBA for red
         ax.plot_surface(grid_x_new, grid_y_new, grid_z_new, facecolors=colors_new.reshape(grid_x_new.shape + (4,)), shade=False)
-
 
         scatter = ax.scatter(grid_x.flatten(), grid_y.flatten(), grid_z.flatten(
         ), c=colors, s=10, picker=5)  # s is the size of the points
@@ -274,15 +295,16 @@ class QueensNet:
                 f"Clicked on ({grid_x.flatten()[ind]}, {grid_y.flatten()[ind]})")
             print(f"State: {sampled_states[ind]}")
             print(f"Energy: {grid_z.flatten()[ind]}")
-            self.place_queen(self.s, sampled_states[ind])
-
+            # self.place_queen(self.s, sampled_states[ind])
+            q_str = self.get_queens_string(sampled_states[ind])
+            self.print_queens(sampled_states[ind])
             # Remove previous annotations
             for txt in ax.texts:
                 txt.set_visible(False)
 
             # Display the board state in a text box
             anchored_text = AnchoredText(
-                self.get_queens_string(),
+                q_str,
                 loc='upper right',
                 prop=dict(
                     backgroundcolor='black',
@@ -297,6 +319,6 @@ class QueensNet:
         fig.canvas.mpl_connect('pick_event', on_pick)
         plt.show()
 
+# q = QueensNet(8)
 
-# q = QueensNet()
 # q.print_queens_energy_3d()
