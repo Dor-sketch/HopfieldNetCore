@@ -17,6 +17,7 @@ This is an ongoing project, and the GUI is being developed to support educationa
 - [How to Use](#how-to-use)
 - [Examples](#examples)
   - [N-Queens - New addition](#n-queens---new-addition)
+    - [Concept Idea - Mapping all solutions without backtracking](#concept-idea---mapping-all-solutions-without-backtracking)
   - [Solving TSP](#solving-tsp)
 - [Installation](#installation)
 - [Contributing](#contributing)
@@ -245,6 +246,80 @@ You can also run the N-Queens puzzle without the neural network by running the `
   <img src="images/q_light2.png" alt="N-Queens Light" width="400">
   <br>
   <i>Interactive graphical interface for the N-Queens puzzle without the neural network. Place queens on the board and check for conflicts.</i>
+</p>
+
+---
+
+#### Concept Idea - Mapping all solutions without backtracking
+
+We can represent each state of an $N \times N$ chessboard as a decimal number, similarly to the `Wolfram code`. See [Wolfram Code](https://en.wikipedia.org/wiki/Wolfram_code) for reference. The index will be mapped as an $N$-base number. For example:
+
+For index $0$, we have the following mapping:
+
+$$
+\begin{bmatrix}
+♛ & . & . & . & . & . & . & . \\
+♛ & . & . & . & . & . & . & . \\
+♛ & . & . & . & . & . & . & . \\
+♛ & . & . & . & . & . & . & . \\
+♛ & . & . & . & . & . & . & . \\
+♛ & . & . & . & . & . & . & . \\
+♛ & . & . & . & . & . & . & . \\
+♛ & . & . & . & . & . & . & . \\
+\end{bmatrix}
+$$
+
+For index $1$, we have the following mapping:
+
+$$
+\begin{bmatrix}
+. & ♛ & . & . & . & . & . & . \\
+♛ & . & . & . & . & . & . & . \\
+♛ & . & . & . & . & . & . & . \\
+♛ & . & . & . & . & . & . & . \\
+♛ & . & . & . & . & . & . & . \\
+♛ & . & . & . & . & . & . & . \\
+♛ & . & . & . & . & . & . & . \\
+♛ & . & . & . & . & . & . & . \\
+\end{bmatrix}
+$$
+
+For index $8$, we have the following mapping:
+
+$$
+\begin{bmatrix}
+♛ & . & . & . & . & . & . & . \\
+. & ♛ & . & . & . & . & . & . \\
+♛ & . & . & . & . & . & . & . \\
+♛ & . & . & . & . & . & . & . \\
+♛ & . & . & . & . & . & . & . \\
+♛ & . & . & . & . & . & . & . \\
+♛ & . & . & . & . & . & . & . \\
+♛ & . & . & . & . & . & . & . \\
+\end{bmatrix}
+$$
+
+This method helps in formalizing the states, and also eliminates some non-valid states through the numbers. For example, 0 represents the state of all queens in the first column - and we can also observe states like $N^N-1$, where all queens are in the last column, $N^N / 2$, where all queens are in the middle column, and so on. But the more interesting aspect is the linear mapping of the states, which can be used to generate all possible solutions without backtracking. Look at the following figures:
+
+<p align="center">
+  <img src="images/5_cro.png" alt="Queens Map" width="500">
+  <img src="images/6_crown.png" alt="Queens Map" width="500">
+  <img src="images/7_c.png" alt="Queens Map" width="500">
+  <br>
+  <i>Mapping of the N-Queens problem states to decimal numbers. Each state of the N-Queens problem is represented as a decimal number, allowing for a linear mapping of all possible solutions without backtracking.</i>
+</p>
+
+If we look closer, we can find more symmetry:
+
+<p align="center">
+    <img src="images/q_crown_zoom.png" alt="Queens Map" width="500">
+    <br>
+    <i>Zooming in on the mapping of the N-Queens problem states to decimal numbers, revealing symmetries and patterns in the linear representation of all possible solutions.</i>
+</p>
+
+My suggestion is to leverage the organic nature of the energy mapping as a way to navigate the enormous state space of the N-Queens problem. The idea is to locate groups of solutions, while skipping the invalid ones without the need to actually check them. The main difference between other approaches, such as genetic algorithms, is that we actually do use brute force in some way, but we do it smartly. I believe that samples from the energy map may even help to produce solvable equations for the N-Queens problem.
+
+This approach hasn't been implemented yet, but it is a concept idea that could be explored further. The main challenge is to find a way to navigate the energy landscape efficiently, leveraging the network's dynamics to explore the state space of the N-Queens problem.
 
 ---
 
@@ -350,3 +425,15 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
   <img src="images/disk2.png" alt="Energy Landscape Visualization" width="350">
   <img src="images/disk_world.png" alt="Energy Landscape Visualization" width="350">
 </p>
+
+
+<p align="center">
+  <img src="images/sea.png" alt="Energy Landscape Visualization" width="350">
+  <img src="images/many.png" alt="Energy Landscape Visualization" width="350">
+  <img src="images/Figure_2.png" alt="Energy Landscape Visualization" width="350">
+  <img src="images/Figure_3.png" alt="Energy Landscape Visualization" width="350">
+  <img src="images/Figure_5.png" alt="Energy Landscape Visualization" width="350">
+  <img src="images/ee.png" alt="Energy Landscape Visualization" width="350">
+  <img src="images/desert.png" alt="Energy Landscape Visualization" width="350">
+  <img src="images/bird.png" alt="Energy Landscape Visualization" width="350">
+  <img src="images/ccc.png" alt="Energy Landscape Visualization" width="350">
